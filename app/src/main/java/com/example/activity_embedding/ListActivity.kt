@@ -17,26 +17,25 @@
 package com.example.activity_embedding
 
 import android.os.Bundle
-import android.os.Parcelable
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-
+import androidx.window.embedding.SplitAttributes
+import androidx.window.embedding.SplitAttributes.SplitType.Companion.SPLIT_TYPE_EXPAND
+import androidx.window.embedding.SplitController
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigationrail.NavigationRailView
 
 /**
  * The list portion of a list-detail layout.
  */
 class ListActivity : AppCompatActivity() {
 
-    private var recylerViewState: Parcelable? = null
-    private var rememberPosition: Int? = 0
-    private lateinit var listRecyclerView: RecyclerView
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_list)
 
-        listRecyclerView = findViewById(R.id.listRecyclerView)
+        val listRecyclerView: RecyclerView = findViewById(R.id.listRecyclerView)
         val arraySize = 50
         listRecyclerView.adapter = ItemAdapter(
             Array(arraySize) {
@@ -44,23 +43,34 @@ class ListActivity : AppCompatActivity() {
                          else "Item ${(i + 1)}"
             }
         )
-    }
 
-    override fun onPause() {
-        super.onPause()
-        try {
-            val layoutManager = listRecyclerView.layoutManager as LinearLayoutManager
-            val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-            val child = listRecyclerView.getChildAt(firstVisibleItemPosition)
-            rememberPosition = listRecyclerView.layoutManager?.getPosition(child)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            rememberPosition = 30
+        SplitController.getInstance(this).setSplitAttributesCalculator {
+            params ->
+
+            if (params.areDefaultConstraintsSatisfied) {
+                // When default constraints are satisfied, use the navigation rail.
+                setWiderScreenNavigation(true)
+                return@setSplitAttributesCalculator params.defaultSplitAttributes
+            } else {
+                // Use the bottom navigation bar in other cases.
+                setWiderScreenNavigation(false)
+                // Expand containers if the device is in portrait or the width is less than 600 dp.
+                SplitAttributes.Builder()
+                    .setSplitType(SPLIT_TYPE_EXPAND)
+                    .build()
+            }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        rememberPosition?.let { listRecyclerView.scrollToPosition(it) }
+    private fun setWiderScreenNavigation(useNavRail: Boolean) {
+        val navRail: NavigationRailView = findViewById(R.id.navigationRailView)
+        val bottomNav: BottomNavigationView = findViewById(R.id.bottomNavigationView)
+        if (useNavRail) {
+            navRail.visibility = View.VISIBLE
+            bottomNav.visibility = View.GONE
+        } else {
+            navRail.visibility = View.GONE
+            bottomNav.visibility = View.VISIBLE
+        }
     }
 }

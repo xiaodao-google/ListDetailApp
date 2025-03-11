@@ -17,10 +17,10 @@
 package com.example.activity_embedding
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.MenuItem
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 
 /**
  * The detail portion of a list-detail layout.
